@@ -1,0 +1,79 @@
+<div class="mt-2 mb-4">
+  <h1>Flights</h1>
+</div>
+
+  <%= form_with url: root_path, method: :get do |f| %>
+  <div class="mb-2">
+    <%= f.label :departure_airport_id, "From:" %>
+    <%= f.select :departure_airport_id, 
+                 options_for_select(@airport_options, params[:departure_airport_id]),
+                 { prompt: "Select departure airport" } %>
+  </div>
+
+  <div class="mb-2">
+    <%= f.label :arrival_airport_id, "To:" %>
+    <%= f.select :arrival_airport_id, 
+                 options_for_select(@airport_options, params[:arrival_airport_id]),
+                 { prompt: "Select arrival airport" } %>
+  </div>
+
+  <div class="mb-2">
+    <%= f.label :start, "Date:" %>
+    <%= f.select :start, 
+                 options_for_select(@flight_dates.map { |date| [date.strftime("%B %d, %Y"), date] },
+                                  params[:start]),
+                 { prompt: "Select departure date" } %>
+  </div>
+
+  <div class="mb-2">
+    <%= f.label :num_passengers, "Number of Passengers:" %>
+    <%= f.select :num_passengers, 
+                 options_for_select((1..4).map { |n| [pluralize(n, "passenger"), n] }, 
+                                  params[:num_passengers]),
+                 { prompt: "Select number of passengers" },
+                 { required: true } %>
+  </div>
+
+  <div class="mt-3">
+    <%= f.submit "Search Flights", class: "btn btn-primary" %>
+    <%= link_to "Reset", root_path, class: "btn btn-secondary ms-2" %>
+  </div>
+<% end %>
+
+<% if params[:commit] %>
+  <% if @flights.present? %>
+    <div class="mt-4">
+      <h2>Available Flights</h2>
+      
+      <%= form_with url: new_booking_path, method: :get do |f| %>
+        <%= f.hidden_field :num_passengers, value: params[:num_passengers] %>
+        
+        <% @flights.each do |flight| %>
+          <div class="card mb-2">
+            <div class="card-body">
+              <div class="form-check">
+                <%= f.radio_button :flight_id, flight.id, class: "form-check-input" %>
+                <%= f.label "flight_id_#{flight.id}", class: "form-check-label" do %>
+                  <p>
+                    From: <%= flight.departure_airport.code %> →
+                    To: <%= flight.arrival_airport.code %>
+                  </p>
+                  <p>Date: <%= flight.start.strftime("%B %d, %Y") %></p>
+                  <p>Duration: <%= flight.duration %> minutes</p>
+                <% end %>
+              </div>
+            </div>
+          </div>
+        <% end %>
+
+        <div class="mt-3 mb-3">
+          <%= f.submit "Book Flight", class: "btn btn-success" %>
+        </div>
+      <% end %>
+    </div>
+  <% else %>
+    <div class="mt-4 alert alert-info">
+      No flights found matching your search criteria.
+    </div>
+  <% end %>
+<% end %>
